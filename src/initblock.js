@@ -30,9 +30,9 @@ let blockchain = [genesisBlock];
 const getLastBlock = () => blockchain[blockchain.length -1];
 const getTimeStamp = () => new Date().getTime() / 1000;
 const getBlockChain = () => blockchain;
-const createHash = (index, previousHash, timestamp, data) => { // data를 string 처리 -> Validaton 때문
+const createHash = (index, previousHash, timestamp, data) =>  // data를 string 처리 -> Validaton 때문
    CryptoJS.SHA256(index + previousHash + timestamp + JSON.stringify(data)).toString();
-};
+
 const getBlockHash = (block) => createHash(block.index, block.previousHash, block.timestamp, block.data);
 
 // 3. 새로운 블록을 만드는 함수     
@@ -41,7 +41,8 @@ const createNewBlock = data => {
     const newBlockIndex = previousBlock.index + 1; // 직전 블록의 index
     const newTimeStamp = getTimeStamp(); 
     const newHash = createHash(newBlockIndex, previousBlock.hash, newTimeStamp, data);
-    const newBlock = new Block(newBlockIndex, previousBlock.hash, newTimeStamp, data);
+    const newBlock = new Block(newBlockIndex, newHash, previousBlock.hash, newTimeStamp, data);
+    addBlockToChain(newBlock);
     return newBlock;
 }
 
@@ -52,7 +53,7 @@ const isNewStructrueValid = block => {
         typeof block.hash === "string" &&
         typeof block.previousHash === "string" &&
         typeof block.timestamp === "number" &&
-        typeof block.data === "string" 
+        typeof block.data === "string"
     );
 }
 
@@ -94,8 +95,9 @@ const replaceChain = candidateChain => {
     if(isChainValid(candidateChain) && candidateChain.length > getBlockChain().lenth){ // 현재 체인길이 < 후보체인 길이
         blockchain = candidateChain;
         return true;
-    } 
-    return false;
+    } else{
+        return false;
+    }
 }
 
 // 7-1. 체인에 새로운 블록을 추가하기
@@ -103,6 +105,11 @@ const addBlockToChain = candidateBlock => {
     if(isNewBlockValid(candidateBlock, getLastBlock())){
         getBlockChain().push(candidateBlock);
         return true;
-    } 
-    return false;
+    } else{
+        return false;
+    }
+}
+
+module.exports = {
+    getBlockChain,createNewBlock
 }
