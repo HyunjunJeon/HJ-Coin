@@ -16,13 +16,19 @@ const getSockets = () => sockets;
 const StartP2PServer = server => {
   const wsServer = new WebSocket.Server({server});
   wsServer.on("Connection", ws => { 
-    console.log(`Hello ${ws}`);
+    //console.log(`Hello ${ws}`);
+    initSocketConnection(ws);
   });
   console.log("HJ Coin P2P Server is Running~~!!");
 };
 
 const initSocketConnection = socket => {
   sockets.push(socket);
+  socket.on("message", (data) => {
+    console.log(data);
+  });
+  setTimeout(() => socket.send("weblcome")
+  ,5000);
 };
 
 // peer 와 peer 간 연결
@@ -32,6 +38,20 @@ const connectToPeers = newPeer => {
     initSocketConnection(ws);
   });
 };
+
+const initError = ws => {
+  const closeSocketConnection = ws => {
+    ws.close();
+    sockets.splice(sockets.indexOf(ws), 1);
+  }
+  ws.on("close",()=>{
+    closeSocketConnection(ws);
+  });
+  ws.on("error",()=>{
+    closeSocketConnection(ws);
+  });
+};
+
 
 module.exports = {
   StartP2PServer,
