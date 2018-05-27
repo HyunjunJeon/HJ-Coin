@@ -6,9 +6,39 @@
 */
 
 // socket은 peer 와 peer 사이의 대화 통로
-const WebSocket = require('ws');
+const WebSocket = require('ws'),
+  Blockchain = require('./initblock');
+
+const { getLastBlock } = Blockchain;
 
 const sockets = [];
+
+// Message Types 
+const GET_LATEST = "GET_LATEST";
+const GET_ALL = "GET_ALL";
+const BLOCKCHAIN_RESPONSE = "BLOCKCHAIN_RESPONSE";
+
+// Message Creator ( like Redux )
+const getLastest = () => { 
+  return{
+    type: GET_LATEST,
+    data: null,
+  };
+};
+
+const getAll = () => {
+  return {
+    type: GET_ALL,
+    data: null,
+  };
+};
+
+const getBlockChainResponse = data => {
+  return {
+    type: BLOCKCHAIN_RESPONSE,
+    data: data,
+  };
+}
 
 const getSockets = () => sockets;
 
@@ -22,13 +52,46 @@ const StartP2PServer = server => {
   console.log("HJ Coin P2P Server is Running~~!!");
 };
 
-const initSocketConnection = socket => {
+const initSocketConnection = ws => {
   sockets.push(socket);
-  socket.on("message", (data) => {
-    console.log(data);
+  handleSocketMessage(ws);
+  handleSocketError(ws);
+  sendMessage(ws,getLastest());
+};
+
+const parseData = data => {
+  try{
+    return JSON.parse(data);
+  }catch(e){
+    console.log(e);
+    return null;
+  }
+};
+
+const sendMessage = (ws, message) => ws.send(JSON.stringify(message));
+
+const handleSocketMessage = ws => {
+  ws.on("Message",data => {
+    const message = parseData(data);
+    if(message == null){
+      return;
+    }
+    console.log(message);
+    switch(message.type){
+      case GET_LATEST:
+        sendMessage(ws,getLastBlock());
+        break;
+    }
   });
-  setTimeout(() => socket.send("weblcome")
-  ,5000);
+};
+
+const handleSocketError = ws => {
+  const closeSocketConnection = ws => {
+    ws.close();
+    sockets.splice(sockets.indexOf(ws), 1);
+  };
+  ws.on("close",() => closeSocketConnection(ws));
+  ws.on("error",() => closeSocketConnection(ws));
 };
 
 // peer 와 peer 간 연결
@@ -38,20 +101,6 @@ const connectToPeers = newPeer => {
     initSocketConnection(ws);
   });
 };
-
-const initError = ws => {
-  const closeSocketConnection = ws => {
-    ws.close();
-    sockets.splice(sockets.indexOf(ws), 1);
-  }
-  ws.on("close",()=>{
-    closeSocketConnection(ws);
-  });
-  ws.on("error",()=>{
-    closeSocketConnection(ws);
-  });
-};
-
 
 module.exports = {
   StartP2PServer,
