@@ -47,7 +47,7 @@ const createNewBlock = data => {
 }
 
 // 4. Validation1 - Block Structure
-const isNewStructrueValid = block => {
+const isBlockStructrueValid = block => {
     return ( // 타입검증을 통해 하나라도 틀리면 false
         typeof block.index === "number" &&
         typeof block.hash === "string" &&
@@ -58,8 +58,8 @@ const isNewStructrueValid = block => {
 }
 
 // 5. Validation2 - Block Content
-const isNewBlockValid = (candidateBlock, latestBlock) => { // 후보블록 : 추가하고 싶은 블록 & 가장 최근 추가된 블록
-    if(!isNewStructrueValid(candidateBlock)){ // Block Structure 검증
+const isBlockValid = (candidateBlock, latestBlock) => { // 후보블록 : 추가하고 싶은 블록 & 가장 최근 추가된 블록
+    if(!isBlockStructrueValid(candidateBlock)){ // Block Structure 검증
         console.log("The candidate block is not valid")
         return false;
     }else if(latestBlock.index + 1 !== candidateBlock.index){ // 최근 추가된 블록의 인덱스 + 1 = 후보블록 인덱스
@@ -111,5 +111,9 @@ const addBlockToChain = candidateBlock => {
 }
 
 module.exports = {
-    getBlockChain, createNewBlock, getLastBlock
+    getBlockChain, 
+    createNewBlock, 
+    getLastBlock, 
+    isBlockStructrueValid,
+    addBlockToChain
 }

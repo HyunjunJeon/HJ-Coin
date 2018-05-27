@@ -9,7 +9,7 @@
 const WebSocket = require('ws'),
   Blockchain = require('./initblock');
 
-const { getLastBlock } = Blockchain;
+const { getLastBlock, isBlockStructrueValid, addBlockToChain } = Blockchain;
 
 const sockets = [];
 
@@ -42,16 +42,6 @@ const getBlockChainResponse = data => {
 
 const getSockets = () => sockets;
 
-// HTTP, P2P 서버는 같은 '포트'에 존재 가능 => Protocol이 다르니까
-const StartP2PServer = server => {
-  const wsServer = new WebSocket.Server({server});
-  wsServer.on("Connection", ws => { 
-    //console.log(`Hello ${ws}`);
-    initSocketConnection(ws);
-  });
-  console.log("HJ Coin P2P Server is Running~~!!");
-};
-
 const initSocketConnection = ws => {
   sockets.push(socket);
   handleSocketMessage(ws);
@@ -70,6 +60,8 @@ const parseData = data => {
 
 const sendMessage = (ws, message) => ws.send(JSON.stringify(message));
 
+const responseLatest = () => getBlockChainResponse([getLastBlock()]);
+
 const handleSocketMessage = ws => {
   ws.on("Message",data => {
     const message = parseData(data);
@@ -79,11 +71,38 @@ const handleSocketMessage = ws => {
     console.log(message);
     switch(message.type){
       case GET_LATEST:
-        sendMessage(ws,getLastBlock());
+        sendMessage(ws,responseLatest());
+        break;
+      case BLOCKCHAIN_RESPONSE:
+        const receiveBlocks = message.data;
+        if (receiveBlocks == null){
+          break;
+        }
+        handleBlockchainResponse(receiveBlocks);
         break;
     }
   });
 };
+
+const handleBlockchainResponse = receiveBlocks => {
+  if(receiveBlocks.length === 0){
+    console.log("Receive Blocks have a lenth of 0")
+    return ;
+  }
+  const latestBlockReceived = receiveBlocks[receiveBlocks.lenth -1];
+  if(!isBlockStructrueValid(latestBlockReceived)){
+    console.log("The Block Structure of the Block Receive is Not Valid");
+    return;
+  }
+  const newestBlock = getLastBlock();
+  if(latestBlockReceived.index > newestBlock.index){
+    if(newestBlock.hash === latestBlockReceived.previousHash){
+      addBlockToChain(latestBlockReceived);
+    }else if(){
+      
+    }
+  }
+}
 
 const handleSocketError = ws => {
   const closeSocketConnection = ws => {
@@ -100,6 +119,16 @@ const connectToPeers = newPeer => {
   ws.on("open the connection", () => {
     initSocketConnection(ws);
   });
+};
+
+// HTTP, P2P 서버는 같은 '포트'에 존재 가능 => Protocol이 다르니까
+const StartP2PServer = server => {
+  const wsServer = new WebSocket.Server({ server });
+  wsServer.on("Connection", ws => {
+    //console.log(`Hello ${ws}`);
+    initSocketConnection(ws);
+  });
+  console.log("HJ Coin P2P Server is Running~~!!");
 };
 
 module.exports = {
