@@ -9,7 +9,7 @@
 const WebSocket = require('ws'),
   Blockchain = require('./initblock');
 
-const { getLastBlock, isBlockStructrueValid, addBlockToChain } = Blockchain;
+const { getLastBlock, isBlockStructrueValid, addBlockToChain, replaceChain } = Blockchain;
 
 const sockets = [];
 
@@ -96,10 +96,12 @@ const handleBlockchainResponse = receiveBlocks => {
   }
   const newestBlock = getLastBlock();
   if(latestBlockReceived.index > newestBlock.index){
-    if(newestBlock.hash === latestBlockReceived.previousHash){
+    if(newestBlock.hash === latestBlockReceived.previousHash){ // 1개 블록 앞서있을 때
       addBlockToChain(latestBlockReceived);
-    }else if(){
-      
+    }else if(receiveBlocks.length === 1){ // 2개 이상의 블록을 앞서 있을 때
+      // to do, get all chain, we are waay behind
+    }else{
+      replaceChain(receiveBlocks);
     }
   }
 }

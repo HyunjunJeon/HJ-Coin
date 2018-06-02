@@ -115,5 +115,6 @@ module.exports = {
     createNewBlock, 
     getLastBlock, 
     isBlockStructrueValid,
-    addBlockToChain
+    addBlockToChain,
+    replaceChain
 }
