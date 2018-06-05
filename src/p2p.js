@@ -9,7 +9,8 @@
 const WebSocket = require('ws'),
   Blockchain = require('./initblock');
 
-const { getLastBlock, isBlockStructrueValid, addBlockToChain, replaceChain } = Blockchain;
+const { getBlockChain, getLastBlock, isBlockStructrueValid, 
+  addBlockToChain, replaceChain } = Blockchain;
 
 const sockets = [];
 
@@ -60,7 +61,11 @@ const parseData = data => {
 
 const sendMessage = (ws, message) => ws.send(JSON.stringify(message));
 
+const sendMessageToAll = message => sockets.forEach( socket => sendMessage(ws, message));
+
 const responseLatest = () => getBlockChainResponse([getLastBlock()]);
+
+const responseAll = () => getBlockChainResponse(getBlockChain());
 
 const handleSocketMessage = ws => {
   ws.on("Message",data => {
@@ -80,6 +85,9 @@ const handleSocketMessage = ws => {
         }
         handleBlockchainResponse(receiveBlocks);
         break;
+      case GET_ALL:
+        sendMessage(ws, responseAll());
+        break;
     }
   });
 };
@@ -89,17 +97,20 @@ const handleBlockchainResponse = receiveBlocks => {
     console.log("Receive Blocks have a lenth of 0")
     return ;
   }
+
   const latestBlockReceived = receiveBlocks[receiveBlocks.lenth -1];
   if(!isBlockStructrueValid(latestBlockReceived)){
     console.log("The Block Structure of the Block Receive is Not Valid");
     return;
   }
+
   const newestBlock = getLastBlock();
   if(latestBlockReceived.index > newestBlock.index){
     if(newestBlock.hash === latestBlockReceived.previousHash){ // 1개 블록 앞서있을 때
       addBlockToChain(latestBlockReceived);
     }else if(receiveBlocks.length === 1){ // 2개 이상의 블록을 앞서 있을 때
-      // to do, get all chain, we are waay behind
+      // 전체 블록체인을 가져옴 -> 모든 Socket에게 보내달라고 함
+      sendMessageToAll(getAll())
     }else{
       replaceChain(receiveBlocks);
     }
