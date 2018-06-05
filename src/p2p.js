@@ -107,7 +107,9 @@ const handleBlockchainResponse = receiveBlocks => {
   const newestBlock = getLastBlock();
   if(latestBlockReceived.index > newestBlock.index){
     if(newestBlock.hash === latestBlockReceived.previousHash){ // 1개 블록 앞서있을 때
-      addBlockToChain(latestBlockReceived);
+      if(addBlockToChain(latestBlockReceived)){
+        broadCastNewBlock();
+      }
     }else if(receiveBlocks.length === 1){ // 2개 이상의 블록을 앞서 있을 때
       // 전체 블록체인을 가져옴 -> 모든 Socket에게 보내달라고 함
       sendMessageToAll(getAll())
@@ -115,6 +117,7 @@ const handleBlockchainResponse = receiveBlocks => {
       replaceChain(receiveBlocks);
     }
   }
+
 }
 
 const handleSocketError = ws => {
@@ -134,6 +137,8 @@ const connectToPeers = newPeer => {
   });
 };
 
+const broadCastNewBlock = () => sendMessageToAll(responseLatest());
+
 // HTTP, P2P 서버는 같은 '포트'에 존재 가능 => Protocol이 다르니까
 const StartP2PServer = server => {
   const wsServer = new WebSocket.Server({ server });
@@ -146,5 +151,6 @@ const StartP2PServer = server => {
 
 module.exports = {
   StartP2PServer,
-  connectToPeers
+  connectToPeers,
+  broadCastNewBlock
 };

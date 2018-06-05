@@ -43,6 +43,8 @@ const createNewBlock = data => {
     const newHash = createHash(newBlockIndex, previousBlock.hash, newTimeStamp, data);
     const newBlock = new Block(newBlockIndex, newHash, previousBlock.hash, newTimeStamp, data);
     addBlockToChain(newBlock);
+    // BroadCasting - 새로운 블록을 생성하면 항상 알리도록
+    require('./p2p').broadCastNewBlock();
     return newBlock;
 }
 
