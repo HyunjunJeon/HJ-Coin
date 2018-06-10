@@ -107,8 +107,8 @@ const handleBlockchainResponse = receiveBlocks => {
   const newestBlock = getLastBlock();
   if(latestBlockReceived.index > newestBlock.index){
     if(newestBlock.hash === latestBlockReceived.previousHash){ // 1개 블록 앞서있을 때 ( 바로 옆에 붙어있음 )
-      if(addBlockToChain(latestBlockReceived)){
-        broadCastNewBlock();
+      if(addBlockToChain(latestBlockReceived)){ // 새로운 블록이 추가되었다면
+        broadCastNewBlock(); // 브로드캐스팅 하라
       }
     }else if(receiveBlocks.length === 1){ // 2개 이상의 블록을 앞서 있을 때 ( 멀리 떨어져 있음 )
       // 전체 블록체인을 가져옴 -> 모든 Socket에게 보내달라고 함
@@ -137,6 +137,7 @@ const connectToPeers = newPeer => {
   });
 };
 
+// 노드가 블록을 만들면 다른 노드들에게도 그가 유효한 블록을 가지고 있음을 알림 
 const broadCastNewBlock = () => sendMessageToAll(responseLatest());
 
 // HTTP, P2P 서버는 같은 '포트'에 존재 가능 => Protocol이 다르니까
