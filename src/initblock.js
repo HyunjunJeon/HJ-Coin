@@ -6,12 +6,14 @@ class Block{
      해쉬는 input이 바뀌면 '아웃풋'도 무조건 바뀜
      다음 블록은 이전 블록의 Hash를 가져다가 사용
     */
-    constructor(index, hash, previousHash, timestamp, data){
+    constructor(index, hash, previousHash, timestamp, data, difficulty, nonce){
         this.index = index;
         this.hash = hash;
         this.previousHash = previousHash;
         this.timestamp = timestamp;
         this.data = data;
+        this.difficulty = difficulty;
+        this.nonce = nonce;
     }
 }
 
@@ -21,7 +23,9 @@ const genesisBlock = new Block(
     "F53CF2C1210D6C37569107D5591BA2B76A9DF4AC54D0EE273EDFBFEA9ABA2D62", // SHA256 웹사이트에 입력하여 받은 값 사용
     null,
     1526201337153, // new Date().getTime() -> 처음 만들던 시점의 값을 이용함
-    "This is the Genesis Block"
+    "This is the Genesis Block",
+    0,
+    0
 );
 
 let blockchain = [genesisBlock];
@@ -30,7 +34,7 @@ let blockchain = [genesisBlock];
 const getLastBlock = () => blockchain[blockchain.length -1];
 const getTimeStamp = () => new Date().getTime() / 1000;
 const getBlockChain = () => blockchain;
-const createHash = (index, previousHash, timestamp, data) =>  // data를 string 처리 -> Validaton 때문
+const createHash = (index, previousHash, timestamp, data, difficulty, nonce) =>  // data를 string 처리 -> Validaton 때문
    CryptoJS.SHA256(index + previousHash + timestamp + JSON.stringify(data)).toString();
 
 const getBlockHash = (block) => createHash(block.index, block.previousHash, block.timestamp, block.data);
@@ -41,11 +45,31 @@ const createNewBlock = data => {
     const newBlockIndex = previousBlock.index + 1; // 직전 블록의 index
     const newTimeStamp = getTimeStamp(); 
     const newHash = createHash(newBlockIndex, previousBlock.hash, newTimeStamp, data);
-    const newBlock = new Block(newBlockIndex, newHash, previousBlock.hash, newTimeStamp, data);
+    const newBlock = findBlock(newBlockIndex, newHash, previousBlock.hash, newTimeStamp, data, );
     addBlockToChain(newBlock);
     // BroadCasting - 새로운 블록을 생성하면 항상 알리도록
     require('./p2p').broadCastNewBlock();
     return newBlock;
+}
+
+const findBlock = (index, previousHash, timestamp, data, difficulty) => {
+    let nonce = 0 ;
+    while(true){
+        const hash = createHash(
+            index,
+            previousHash,
+            timestamp,
+            data,
+            difficulty,
+            nonce
+        );
+        // to do : Check amount of zeros ( hash Matches Difficulty )
+        if(){
+
+        }else{
+            nonce++;
+        }
+    }
 }
 
 // 4. Validation1 - Block Structure
